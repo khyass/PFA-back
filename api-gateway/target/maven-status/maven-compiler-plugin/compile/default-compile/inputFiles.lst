@@ -1,0 +1,4 @@
+C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\api-gateway\src\main\java\com\example\gateway\ApiGatewayApplication.java
+C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\api-gateway\src\main\java\com\example\gateway\config\SecurityConfig.java
+C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\api-gateway\src\main\java\com\example\gateway\controller\FallbackController.java
+C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\api-gateway\src\main\java\com\example\gateway\filter\RateLimitFilter.java

@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    gateway:
+      routes: []
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:18080/realms/job-platform
+          jwk-set-uri: http://localhost:18080/realms/job-platform/protocol/openid-connect/certs

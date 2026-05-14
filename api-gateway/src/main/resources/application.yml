@@ -1,0 +1,134 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - Accept
+              - X-Requested-With
+            exposedHeaders:
+              - Authorization
+            allowCredentials: true
+            maxAge: 3600
+
+      routes:
+        # Auth Service routes
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/auth/**
+
+        # Candidate Service routes
+        - id: candidate-service
+          uri: ${CANDIDATE_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/candidate/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: candidate-service
+                fallbackUri: forward:/fallback/service
+
+        # Enterprise Service routes
+        - id: enterprise-service
+          uri: ${ENTERPRISE_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/enterprise/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: enterprise-service
+                fallbackUri: forward:/fallback/service
+
+        # Jobs Service routes
+        - id: jobs-service
+          uri: ${JOBS_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: jobs-service
+                fallbackUri: forward:/fallback/service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/job-platform}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/job-platform/protocol/openid-connect/certs}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
+    gateway:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+    instances:
+      auth-service:
+        base-config: default
+      candidate-service:
+        base-config: default
+      enterprise-service:
+        base-config: default
+      jobs-service:
+        base-config: default
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s
+
+# Rate Limiting
+gateway:
+  rate-limit:
+    requests-per-second: 20
+    burst-capacity: 40
+
+# Logging
+logging:
+  level:
+    com.example.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

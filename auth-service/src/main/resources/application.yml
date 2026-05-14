@@ -1,0 +1,84 @@
+server:
+  port: 8082
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: auth-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/job-platform}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/job-platform/protocol/openid-connect/certs}
+
+# Keycloak Admin Configuration
+keycloak:
+  auth-server-url: http://localhost:8180
+  realm: ${KEYCLOAK_REALM:job-platform}
+  client-id: ${KEYCLOAK_CLIENT_ID:job-platform-app}
+  api-client-id: ${KEYCLOAK_API_CLIENT_ID:job-platform-api}
+  api-client-secret: ${KEYCLOAK_API_CLIENT_SECRET:job-platform-api-secret}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:khouloud}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:Kh0ùl0ùd2001}
+
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      keycloak:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        record-exceptions:
+          - java.io.IOException
+          - java.net.ConnectException
+          - jakarta.ws.rs.ProcessingException
+
+  retry:
+    instances:
+      keycloak:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.io.IOException
+          - java.net.ConnectException
+          - jakarta.ws.rs.ProcessingException
+
+  timelimiter:
+    instances:
+      keycloak:
+        timeout-duration: 5s
+        cancel-running-future: true
+
+# Logging
+logging:
+  level:
+    com.example.authservice: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-},%X{userId:-}]"

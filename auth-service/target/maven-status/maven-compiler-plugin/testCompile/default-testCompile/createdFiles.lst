@@ -1,0 +1,7 @@
+com\example\authservice\service\KeycloakServiceTest$RegisterEnterpriseTests.class
+com\example\authservice\AuthServiceApplicationTests.class
+com\example\authservice\controller\AuthControllerTest.class
+com\example\authservice\service\KeycloakServiceTest.class
+com\example\authservice\service\KeycloakServiceTest$RegisterCandidateTests.class
+com\example\authservice\service\KeycloakServiceTest$GetUserProfileTests.class
+com\example\authservice\integration\AuthIntegrationTest.class
