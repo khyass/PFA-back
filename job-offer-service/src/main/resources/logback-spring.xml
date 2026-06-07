@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <customFields>{"application":"${appName}"}</customFields>
+        </encoder>
+    </appender>
+
+    <springProfile name="default,dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="com.example.jobofferservice" level="DEBUG"/>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+        <logger name="com.example.jobofferservice" level="INFO"/>
+    </springProfile>
+</configuration>
