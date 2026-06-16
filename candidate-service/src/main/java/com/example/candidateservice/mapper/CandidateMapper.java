@@ -42,9 +42,8 @@ public interface CandidateMapper {
 
     /**
      * Maps a CandidateProfile entity to a CandidateProfileDTO.
-     * Note: resumeStoragePath is intentionally excluded.
+     * Note: resumeStoragePath is intentionally excluded from the DTO.
      */
-    @Mapping(target = "resumeStoragePath", ignore = true)
     CandidateProfileDTO toCandidateProfileDTO(CandidateProfile profile);
 
     /**

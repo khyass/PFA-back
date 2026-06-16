@@ -55,8 +55,9 @@ public final class JobOfferSpecifications {
     /**
      * Combine multiple filters.
      */
-    public static Specification<JobOffer> withFilters(JobOfferStatus status, String company) {
+    public static Specification<JobOffer> withFilters(JobOfferStatus status, String company, String ownerId) {
         return Specification.where(hasStatus(status))
-                .and(hasCompanyNameLike(company));
+                .and(hasCompanyNameLike(company))
+                .and(hasOwnerId(ownerId));
     }
 }

@@ -6,7 +6,10 @@ import com.example.candidateservice.exception.JobOfferNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -38,8 +41,16 @@ public class JobOfferClient {
             String url = jobOfferServiceUrl + "/api/job-offers/" + jobOfferId;
             log.debug("Fetching job offer from: {}", url);
 
-            JobOfferDTO jobOffer = restTemplate.getForObject(url, JobOfferDTO.class);
+            HttpHeaders headers = new HttpHeaders();
+            String token = getCurrentToken();
+            if (token != null) {
+                headers.setBearerAuth(token);
+            }
 
+            ResponseEntity<JobOfferDTO> response = restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(headers), JobOfferDTO.class);
+
+            JobOfferDTO jobOffer = response.getBody();
             if (jobOffer == null) {
                 throw new JobOfferNotFoundException(jobOfferId);
             }
@@ -62,5 +73,33 @@ public class JobOfferClient {
      */
     public boolean isAcceptingApplications(JobOfferDTO jobOffer) {
         return jobOffer.getStatus() == JobOfferStatus.OPEN;
+    }
+
+    /**
+     * Notifies job-offer-service to increment the candidature count.
+     */
+    public void incrementCandidatureCount(UUID jobOfferId) {
+        try {
+            String url = jobOfferServiceUrl + "/api/job-offers/" + jobOfferId + "/increment-candidature-count";
+            log.debug("Incrementing candidature count for job offer: {}", jobOfferId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String token = getCurrentToken();
+            if (token != null) {
+                headers.setBearerAuth(token);
+            }
+
+            restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+        } catch (Exception e) {
+            log.error("Failed to increment candidature count for job offer {}: {}", jobOfferId, e.getMessage());
+        }
+    }
+
+    private String getCurrentToken() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth instanceof JwtAuthenticationToken jwtAuth) {
+            return jwtAuth.getToken().getTokenValue();
+        }
+        return null;
     }
 }

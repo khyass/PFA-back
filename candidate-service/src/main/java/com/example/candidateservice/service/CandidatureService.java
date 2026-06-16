@@ -109,6 +109,9 @@ public class CandidatureService {
         // Create initial status history entry
         createStatusHistoryEntry(savedCandidature, null, CandidatureStatus.PENDING, "Application submitted");
 
+        // Notify job-offer-service to increment candidature count
+        jobOfferClient.incrementCandidatureCount(jobOfferId);
+
         log.info("Created candidature {} for candidate {} to job {}", savedCandidature.getId(), candidateId, jobOfferId);
 
         return candidateMapper.toCandidatureResponseDTO(savedCandidature);

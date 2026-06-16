@@ -48,10 +48,11 @@ public class JobOfferController {
     public ResponseEntity<Page<JobOfferResponseDTO>> getAllJobOffers(
             @RequestParam(required = false) JobOfferStatus status,
             @RequestParam(required = false) String company,
+            @RequestParam(required = false) String ownerId,
             @PageableDefault(size = 10, sort = "publishedDate", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        log.debug("GET /api/job-offers - status={}, company={}, page={}", status, company, pageable);
-        Page<JobOfferResponseDTO> jobOffers = jobOfferService.getAllJobOffers(status, company, pageable);
+        log.debug("GET /api/job-offers - status={}, company={}, ownerId={}, page={}", status, company, ownerId, pageable);
+        Page<JobOfferResponseDTO> jobOffers = jobOfferService.getAllJobOffers(status, company, ownerId, pageable);
         return ResponseEntity.ok(jobOffers);
     }
 
@@ -177,5 +178,16 @@ public class JobOfferController {
 
         jobOfferService.deleteJobOffer(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Internal endpoint: increments the candidature count for a job offer.
+     * Called by candidate-service when a new application is submitted.
+     */
+    @PostMapping("/{id}/increment-candidature-count")
+    public ResponseEntity<Void> incrementCandidatureCount(@PathVariable UUID id) {
+        log.info("POST /api/job-offers/{}/increment-candidature-count", id);
+        jobOfferService.incrementCandidatureCount(id);
+        return ResponseEntity.ok().build();
     }
 }

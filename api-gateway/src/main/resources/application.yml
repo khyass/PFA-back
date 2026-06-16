@@ -39,7 +39,7 @@ spring:
 
         # Candidate Service routes
         - id: candidate-service
-          uri: ${CANDIDATE_SERVICE_URL:http://localhost:8083}
+          uri: ${CANDIDATE_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/candidate/**
           filters:

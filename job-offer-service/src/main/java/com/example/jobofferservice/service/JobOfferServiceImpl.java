@@ -40,10 +40,10 @@ public class JobOfferServiceImpl implements JobOfferService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<JobOfferResponseDTO> getAllJobOffers(JobOfferStatus status, String company, Pageable pageable) {
-        log.debug("Getting all job offers with status={}, company={}, page={}", status, company, pageable);
+    public Page<JobOfferResponseDTO> getAllJobOffers(JobOfferStatus status, String company, String ownerId, Pageable pageable) {
+        log.debug("Getting all job offers with status={}, company={}, ownerId={}, page={}", status, company, ownerId, pageable);
 
-        Specification<JobOffer> spec = JobOfferSpecifications.withFilters(status, company);
+        Specification<JobOffer> spec = JobOfferSpecifications.withFilters(status, company, ownerId);
         Page<JobOffer> jobOffers = jobOfferRepository.findAll(spec, pageable);
 
         return jobOffers.map(jobOfferMapper::toResponseDTO);
@@ -82,6 +82,15 @@ public class JobOfferServiceImpl implements JobOfferService {
         log.info("Created job offer with id: {}", savedJobOffer.getId());
 
         return jobOfferMapper.toResponseDTO(savedJobOffer);
+    }
+
+    @Override
+    @Transactional
+    public void incrementCandidatureCount(UUID jobOfferId) {
+        JobOffer jobOffer = findJobOfferOrThrow(jobOfferId);
+        jobOffer.setCandidatureCount(jobOffer.getCandidatureCount() + 1);
+        jobOfferRepository.save(jobOffer);
+        log.info("Incremented candidature count for job offer {} to {}", jobOfferId, jobOffer.getCandidatureCount());
     }
 
     @Override

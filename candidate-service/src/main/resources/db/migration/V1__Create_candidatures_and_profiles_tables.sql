@@ -3,7 +3,7 @@
 
 -- Create candidatures table
 CREATE TABLE candidatures (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     job_offer_id UUID NOT NULL,
     job_offer_title VARCHAR(255) NOT NULL,
     company_name VARCHAR(255) NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE candidatures (
 
 -- Create candidature_status_history table
 CREATE TABLE candidature_status_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     candidature_id UUID NOT NULL,
     old_status VARCHAR(50),
     new_status VARCHAR(50) NOT NULL CHECK (new_status IN ('PENDING', 'REVIEWING', 'ACCEPTED', 'REJECTED')),
@@ -29,7 +29,7 @@ CREATE TABLE candidature_status_history (
 
 -- Create candidate_profiles table
 CREATE TABLE candidate_profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL UNIQUE,
     full_name VARCHAR(255),
     phone VARCHAR(50),
@@ -48,12 +48,3 @@ CREATE INDEX idx_candidatures_applied_date ON candidatures(applied_date DESC);
 CREATE INDEX idx_status_history_candidature_id ON candidature_status_history(candidature_id);
 CREATE INDEX idx_status_history_changed_at ON candidature_status_history(changed_at);
 CREATE INDEX idx_profiles_user_id ON candidate_profiles(user_id);
-
--- Add comments for documentation
-COMMENT ON TABLE candidatures IS 'Stores candidate job applications';
-COMMENT ON TABLE candidature_status_history IS 'Tracks status changes for candidatures';
-COMMENT ON TABLE candidate_profiles IS 'Stores candidate profile information';
-COMMENT ON COLUMN candidatures.job_offer_id IS 'Reference to job offer in job-offer-service';
-COMMENT ON COLUMN candidatures.candidate_id IS 'Keycloak user ID of the candidate';
-COMMENT ON COLUMN candidate_profiles.user_id IS 'Keycloak user ID of the candidate';
-COMMENT ON COLUMN candidate_profiles.resume_storage_path IS 'Internal file path - never expose to clients';

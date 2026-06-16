@@ -24,7 +24,7 @@ public interface JobOfferService {
      * @param pageable Pagination parameters
      * @return Page of job offer DTOs
      */
-    Page<JobOfferResponseDTO> getAllJobOffers(JobOfferStatus status, String company, Pageable pageable);
+    Page<JobOfferResponseDTO> getAllJobOffers(JobOfferStatus status, String company, String ownerId, Pageable pageable);
 
     /**
      * Gets a job offer by its ID.
@@ -51,6 +51,13 @@ public interface JobOfferService {
      * @return The created job offer DTO
      */
     JobOfferResponseDTO createJobOffer(JobOfferRequestDTO request, String ownerId);
+
+    /**
+     * Increments the candidature count for a job offer.
+     *
+     * @param jobOfferId The job offer ID
+     */
+    void incrementCandidatureCount(UUID jobOfferId);
 
     /**
      * Updates an existing job offer.
