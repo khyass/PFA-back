@@ -31,7 +31,6 @@ import java.util.UUID;
 @RequestMapping("/api/job-offers")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('ENTREPRISE')")
 public class JobOfferController {
 
     private final JobOfferService jobOfferService;
@@ -96,13 +95,18 @@ public class JobOfferController {
      * @param jwt     The authenticated user's JWT
      * @return The created job offer
      */
+    @PreAuthorize("hasRole('ENTERPRISE')")
     @PostMapping
     public ResponseEntity<JobOfferResponseDTO> createJobOffer(
             @Valid @RequestBody JobOfferRequestDTO request,
             @AuthenticationPrincipal Jwt jwt) {
 
         String ownerId = jwt.getSubject();
-        log.info("POST /api/job-offers - ownerId={}", ownerId);
+        log.info("POST /api/job-offers - ownerId={}, claims={}", ownerId, jwt.getClaims().keySet());
+
+        if (ownerId == null) {
+            ownerId = jwt.getClaim("sub");
+        }
 
         JobOfferResponseDTO createdJobOffer = jobOfferService.createJobOffer(request, ownerId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJobOffer);
@@ -117,6 +121,7 @@ public class JobOfferController {
      * @param jwt     The authenticated user's JWT
      * @return The updated job offer
      */
+    @PreAuthorize("hasRole('ENTERPRISE')")
     @PutMapping("/{id}")
     public ResponseEntity<JobOfferResponseDTO> updateJobOffer(
             @PathVariable UUID id,
@@ -139,6 +144,7 @@ public class JobOfferController {
      * @param jwt     The authenticated user's JWT
      * @return The updated job offer
      */
+    @PreAuthorize("hasRole('ENTERPRISE')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<JobOfferResponseDTO> updateJobOfferStatus(
             @PathVariable UUID id,
@@ -160,6 +166,7 @@ public class JobOfferController {
      * @param jwt The authenticated user's JWT
      * @return No content on success
      */
+    @PreAuthorize("hasRole('ENTERPRISE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteJobOffer(
             @PathVariable UUID id,

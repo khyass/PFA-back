@@ -3,7 +3,7 @@
 
 -- Create job_offers table
 CREATE TABLE job_offers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     status VARCHAR(50) NOT NULL CHECK (status IN ('OPEN', 'CLOSED', 'DRAFT')),
     published_date DATE,
@@ -17,7 +17,7 @@ CREATE TABLE job_offers (
 
 -- Create candidatures table
 CREATE TABLE candidatures (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     applicant_name VARCHAR(255) NOT NULL,
     applicant_email VARCHAR(255) NOT NULL,
     applied_date DATE NOT NULL,
@@ -36,9 +36,3 @@ CREATE INDEX idx_job_offers_owner_id ON job_offers(owner_id);
 CREATE INDEX idx_job_offers_published_date ON job_offers(published_date DESC);
 CREATE INDEX idx_candidatures_job_offer_id ON candidatures(job_offer_id);
 CREATE INDEX idx_candidatures_applicant_id ON candidatures(applicant_id);
-
--- Add comments for documentation
-COMMENT ON TABLE job_offers IS 'Stores job offers posted by enterprise users';
-COMMENT ON TABLE candidatures IS 'Stores candidatures/applications to job offers';
-COMMENT ON COLUMN job_offers.owner_id IS 'Keycloak user ID of the enterprise owner';
-COMMENT ON COLUMN candidatures.applicant_id IS 'Keycloak user ID of the candidate applicant';

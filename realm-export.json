@@ -87,6 +87,7 @@
         "client.session.max.lifespan": "604800"
       },
       "defaultClientScopes": [
+        "openid",
         "web-origins",
         "acr",
         "profile",
