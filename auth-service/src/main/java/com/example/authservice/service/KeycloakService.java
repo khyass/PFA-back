@@ -158,8 +158,6 @@ public class KeycloakService {
     /**
      * Invalidates the user's Keycloak session by revoking the refresh token.
      */
-    @CircuitBreaker(name = "keycloak")
-    @Retry(name = "keycloak")
     public void logout(String refreshToken) {
         log.info("Logging out user");
 
@@ -169,6 +167,9 @@ public class KeycloakService {
 
         try {
             postForm(keycloakConfig.getLogoutUrl(), form);
+        } catch (HttpClientErrorException.BadRequest e) {
+            // Token is already invalid/expired/revoked — treat as successful logout
+            log.warn("Refresh token already invalid during logout (likely expired or rotated): {}", e.getMessage());
         } catch (RestClientException e) {
             throw new KeycloakCommunicationException("Failed to logout from Keycloak", e);
         }

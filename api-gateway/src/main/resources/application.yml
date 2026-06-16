@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
@@ -39,7 +39,7 @@ spring:
 
         # Candidate Service routes
         - id: candidate-service
-          uri: ${CANDIDATE_SERVICE_URL:http://localhost:8082}
+          uri: ${CANDIDATE_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/candidate/**
           filters:
@@ -50,7 +50,7 @@ spring:
 
         # Enterprise Service routes
         - id: enterprise-service
-          uri: ${ENTERPRISE_SERVICE_URL:http://localhost:8083}
+          uri: ${ENTERPRISE_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/enterprise/**
           filters:
@@ -61,7 +61,7 @@ spring:
 
         # Jobs Service routes
         - id: jobs-service
-          uri: ${JOBS_SERVICE_URL:http://localhost:8084}
+          uri: ${JOBS_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/jobs/**
           filters:
@@ -74,8 +74,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/job-platform}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/job-platform/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/job-platform}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/job-platform/protocol/openid-connect/certs}
 
 # Actuator
 management:
