@@ -1,0 +1,46 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: candidate-service-test
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/test
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  upload:
+    path: ${java.io.tmpdir}/candidate-test-uploads
+  job-offer-service:
+    url: http://localhost:8084
+
+# Logging
+logging:
+  level:
+    com.example.candidateservice: DEBUG
+    org.springframework.security: DEBUG
