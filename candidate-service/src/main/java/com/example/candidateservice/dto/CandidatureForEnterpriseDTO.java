@@ -1,6 +1,6 @@
-package com.example.jobofferservice.dto;
+package com.example.candidateservice.dto;
 
-import com.example.jobofferservice.entity.CandidatureStatus;
+import com.example.candidateservice.entity.CandidatureStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,21 +9,19 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * Response DTO for a candidature.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CandidatureDTO {
+public class CandidatureForEnterpriseDTO {
 
     private UUID id;
     private String candidateId;
-    private String applicantName;
-    private String applicantPhone;
-    private String applicantBio;
-    private String applicantLinkedinUrl;
+    private String candidateName;
+    private String candidateEmail;
+    private String candidatePhone;
+    private String candidateBio;
+    private String candidateLinkedinUrl;
     private String resumeFileName;
     private CandidatureStatus status;
     private LocalDate appliedDate;

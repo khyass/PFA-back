@@ -42,12 +42,13 @@ public class CandidatureController {
     @GetMapping
     public ResponseEntity<Page<CandidatureResponseDTO>> getAllCandidatures(
             @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) com.example.candidateservice.entity.CandidatureStatus status,
             @PageableDefault(size = 10, sort = "appliedDate", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String candidateId = jwt.getSubject();
-        log.debug("GET /api/candidatures - candidateId={}, page={}", candidateId, pageable);
+        log.debug("GET /api/candidatures - candidateId={}, status={}, page={}", candidateId, status, pageable);
 
-        Page<CandidatureResponseDTO> candidatures = candidatureService.getAllCandidatures(candidateId, pageable);
+        Page<CandidatureResponseDTO> candidatures = candidatureService.getAllCandidatures(candidateId, status, pageable);
         return ResponseEntity.ok(candidatures);
     }
 

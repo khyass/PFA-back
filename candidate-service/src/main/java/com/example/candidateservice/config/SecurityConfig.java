@@ -36,6 +36,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/internal/**").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/candidatures/*/status").hasRole("ENTERPRISE")
                         .requestMatchers("/api/candidatures/**").hasRole("CANDIDATE")
                         .requestMatchers("/api/candidate/profile/**").hasRole("CANDIDATE")
                         .anyRequest().authenticated()

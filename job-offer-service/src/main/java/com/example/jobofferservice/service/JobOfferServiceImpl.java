@@ -36,6 +36,7 @@ public class JobOfferServiceImpl implements JobOfferService {
 
     private final JobOfferRepository jobOfferRepository;
     private final CandidatureRepository candidatureRepository;
+    private final CandidateServiceClient candidateServiceClient;
     private final JobOfferMapper jobOfferMapper;
 
     @Override
@@ -66,8 +67,7 @@ public class JobOfferServiceImpl implements JobOfferService {
         JobOffer jobOffer = findJobOfferOrThrow(jobOfferId);
         verifyOwnership(jobOffer, userId);
 
-        List<Candidature> candidatures = candidatureRepository.findByJobOfferId(jobOfferId);
-        return jobOfferMapper.toCandidatureDTOList(candidatures);
+        return candidateServiceClient.getCandidaturesForJobOffer(jobOfferId);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.example.candidateservice.entity.CandidatureStatus;
 import com.example.candidateservice.entity.CandidatureStatusHistory;
 import com.example.candidateservice.exception.*;
 import com.example.candidateservice.mapper.CandidateMapper;
+import com.example.candidateservice.repository.CandidateProfileRepository;
 import com.example.candidateservice.repository.CandidatureRepository;
 import com.example.candidateservice.repository.CandidatureStatusHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,16 +32,22 @@ public class CandidatureService {
 
     private final CandidatureRepository candidatureRepository;
     private final CandidatureStatusHistoryRepository statusHistoryRepository;
+    private final CandidateProfileRepository profileRepository;
     private final JobOfferClient jobOfferClient;
     private final CandidateMapper candidateMapper;
 
     /**
-     * Gets all candidatures for the authenticated candidate.
+     * Gets all candidatures for the authenticated candidate, optionally filtered by status.
      */
     @Transactional(readOnly = true)
-    public Page<CandidatureResponseDTO> getAllCandidatures(String candidateId, Pageable pageable) {
-        log.debug("Getting all candidatures for candidate: {}", candidateId);
-        Page<Candidature> candidatures = candidatureRepository.findByCandidateId(candidateId, pageable);
+    public Page<CandidatureResponseDTO> getAllCandidatures(String candidateId, CandidatureStatus status, Pageable pageable) {
+        log.debug("Getting all candidatures for candidate: {}, status={}", candidateId, status);
+        Page<Candidature> candidatures;
+        if (status != null) {
+            candidatures = candidatureRepository.findByCandidateIdAndStatus(candidateId, status, pageable);
+        } else {
+            candidatures = candidatureRepository.findByCandidateId(candidateId, pageable);
+        }
         return candidatures.map(candidateMapper::toCandidatureResponseDTO);
     }
 
@@ -168,6 +175,40 @@ public class CandidatureService {
         createStatusHistoryEntry(candidature, oldStatus, newStatus, note);
 
         log.info("Updated candidature {} status from {} to {}", id, oldStatus, newStatus);
+    }
+
+    /**
+     * Gets all candidatures for a specific job offer (for enterprise/internal use).
+     * Enriches with candidate profile name.
+     */
+    @Transactional(readOnly = true)
+    public List<CandidatureForEnterpriseDTO> getCandidaturesForJobOffer(UUID jobOfferId) {
+        log.debug("Getting candidatures for job offer: {}", jobOfferId);
+
+        List<Candidature> candidatures = candidatureRepository.findByJobOfferId(jobOfferId);
+
+        return candidatures.stream().map(c -> {
+            var builder = CandidatureForEnterpriseDTO.builder()
+                    .id(c.getId())
+                    .candidateId(c.getCandidateId())
+                    .status(c.getStatus())
+                    .appliedDate(c.getAppliedDate())
+                    .coverLetter(c.getCoverLetter());
+
+            profileRepository.findByUserId(c.getCandidateId()).ifPresent(profile -> {
+                builder.candidateName(profile.getFullName() != null ? profile.getFullName() : c.getCandidateId());
+                builder.candidatePhone(profile.getPhone());
+                builder.candidateBio(profile.getBio());
+                builder.candidateLinkedinUrl(profile.getLinkedinUrl());
+                builder.resumeFileName(profile.getResumeFileName());
+            });
+
+            if (builder.build().getCandidateName() == null) {
+                builder.candidateName(c.getCandidateId());
+            }
+
+            return builder.build();
+        }).toList();
     }
 
     private Candidature findCandidatureOrThrow(UUID id, String candidateId) {
