@@ -95,6 +95,26 @@ public class JobOfferClient {
         }
     }
 
+    /**
+     * Notifies job-offer-service to decrement the candidature count.
+     */
+    public void decrementCandidatureCount(UUID jobOfferId) {
+        try {
+            String url = jobOfferServiceUrl + "/api/job-offers/" + jobOfferId + "/decrement-candidature-count";
+            log.debug("Decrementing candidature count for job offer: {}", jobOfferId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String token = getCurrentToken();
+            if (token != null) {
+                headers.setBearerAuth(token);
+            }
+
+            restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+        } catch (Exception e) {
+            log.error("Failed to decrement candidature count for job offer {}: {}", jobOfferId, e.getMessage());
+        }
+    }
+
     private String getCurrentToken() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth instanceof JwtAuthenticationToken jwtAuth) {

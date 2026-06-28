@@ -60,6 +60,13 @@ public interface JobOfferService {
     void incrementCandidatureCount(UUID jobOfferId);
 
     /**
+     * Decrements the candidature count for a job offer.
+     *
+     * @param jobOfferId The job offer ID
+     */
+    void decrementCandidatureCount(UUID jobOfferId);
+
+    /**
      * Updates an existing job offer.
      *
      * @param id      The job offer ID

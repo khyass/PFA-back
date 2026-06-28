@@ -190,4 +190,15 @@ public class JobOfferController {
         jobOfferService.incrementCandidatureCount(id);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Internal endpoint: decrements the candidature count for a job offer.
+     * Called by candidate-service when a candidature is withdrawn.
+     */
+    @PostMapping("/{id}/decrement-candidature-count")
+    public ResponseEntity<Void> decrementCandidatureCount(@PathVariable UUID id) {
+        log.info("POST /api/job-offers/{}/decrement-candidature-count", id);
+        jobOfferService.decrementCandidatureCount(id);
+        return ResponseEntity.ok().build();
+    }
 }

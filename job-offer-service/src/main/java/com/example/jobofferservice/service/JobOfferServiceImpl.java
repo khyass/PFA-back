@@ -94,6 +94,16 @@ public class JobOfferServiceImpl implements JobOfferService {
     }
 
     @Override
+    @Transactional
+    public void decrementCandidatureCount(UUID jobOfferId) {
+        JobOffer jobOffer = findJobOfferOrThrow(jobOfferId);
+        int newCount = Math.max(0, jobOffer.getCandidatureCount() - 1);
+        jobOffer.setCandidatureCount(newCount);
+        jobOfferRepository.save(jobOffer);
+        log.info("Decremented candidature count for job offer {} to {}", jobOfferId, newCount);
+    }
+
+    @Override
     public JobOfferResponseDTO updateJobOffer(UUID id, JobOfferRequestDTO request, String userId) {
         log.info("Updating job offer: {} by user: {}", id, userId);
 

@@ -154,8 +154,12 @@ public class CandidatureService {
             throw new CandidatureNotWithdrawableException(id);
         }
 
+        UUID jobOfferId = candidature.getJobOfferId();
         candidatureRepository.delete(candidature);
         log.info("Withdrawn (deleted) candidature {}", id);
+
+        // Notify job-offer-service to decrement candidature count
+        jobOfferClient.decrementCandidatureCount(jobOfferId);
     }
 
     /**

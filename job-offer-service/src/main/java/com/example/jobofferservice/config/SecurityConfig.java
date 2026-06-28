@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/job-offers/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/job-offers/*/increment-candidature-count").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/job-offers/*/decrement-candidature-count").authenticated()
                         .requestMatchers("/api/job-offers/**").hasRole("ENTERPRISE")
                         .anyRequest().authenticated()
                 )
