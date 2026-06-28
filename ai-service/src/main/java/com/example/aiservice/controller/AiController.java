@@ -2,6 +2,7 @@ package com.example.aiservice.controller;
 
 import com.example.aiservice.dto.*;
 import com.example.aiservice.service.AiMatchingService;
+import com.example.aiservice.service.CoverLetterService;
 import com.example.aiservice.service.InterviewPrepService;
 import com.example.aiservice.service.JobSuggestionService;
 import com.example.aiservice.service.KeywordSuggestionService;
@@ -33,6 +34,7 @@ public class AiController {
     private final JobSuggestionService jobSuggestionService;
     private final KeywordSuggestionService keywordSuggestionService;
     private final InterviewPrepService interviewPrepService;
+    private final CoverLetterService coverLetterService;
 
     /**
      * Get ranked job offer suggestions for the authenticated candidate.
@@ -167,6 +169,27 @@ public class AiController {
 
         InterviewPrepResponse response = interviewPrepService.getInterviewPrep(
                 candidateId, request.getOfferId(), request.isForceRefresh());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Generate an AI-powered cover letter for a specific job offer.
+     *
+     * @param request The cover letter request with offerId, optional skills and tone
+     * @param jwt     The authenticated user's JWT
+     * @return Generated cover letter text
+     */
+    @PostMapping("/generate-cover-letter")
+    public ResponseEntity<CoverLetterResponse> generateCoverLetter(
+            @Valid @RequestBody CoverLetterRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String candidateId = jwt.getSubject();
+        log.info("POST /api/ai/generate-cover-letter - candidateId={}, offerId={}, tone={}",
+                candidateId, request.getOfferId(), request.getTone());
+
+        CoverLetterResponse response = coverLetterService.generateCoverLetter(
+                candidateId, request.getOfferId(), request.getCandidateSkills(), request.getTone());
         return ResponseEntity.ok(response);
     }
 }
