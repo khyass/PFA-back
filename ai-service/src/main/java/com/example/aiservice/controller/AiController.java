@@ -2,7 +2,10 @@ package com.example.aiservice.controller;
 
 import com.example.aiservice.dto.*;
 import com.example.aiservice.service.AiMatchingService;
+import com.example.aiservice.service.InterviewPrepService;
 import com.example.aiservice.service.JobSuggestionService;
+import com.example.aiservice.service.KeywordSuggestionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,6 +31,8 @@ public class AiController {
 
     private final AiMatchingService aiMatchingService;
     private final JobSuggestionService jobSuggestionService;
+    private final KeywordSuggestionService keywordSuggestionService;
+    private final InterviewPrepService interviewPrepService;
 
     /**
      * Get ranked job offer suggestions for the authenticated candidate.
@@ -121,5 +126,47 @@ public class AiController {
                 .build();
 
         return ResponseEntity.ok(interviewPrep);
+    }
+
+    /**
+     * Keyword-based offer suggestion.
+     * Takes a list of competence keywords and returns ranked matching offers.
+     *
+     * @param request The suggest offers request with keywords
+     * @param jwt     The authenticated user's JWT
+     * @return List of offer suggestions with scores and justifications
+     */
+    @PostMapping("/suggest-offers")
+    public ResponseEntity<List<OfferSuggestionResponse>> suggestOffers(
+            @Valid @RequestBody SuggestOffersRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String candidateId = jwt.getSubject();
+        log.info("POST /api/ai/suggest-offers - candidateId={}, keywords={}", candidateId, request.getKeywords().size());
+
+        List<OfferSuggestionResponse> suggestions = keywordSuggestionService.suggestOffers(candidateId, request.getKeywords());
+        return ResponseEntity.ok(suggestions);
+    }
+
+    /**
+     * AI-powered interview preparation with structured Q&A.
+     * Generates technical and behavioral questions with answer outlines.
+     *
+     * @param request The interview prep request with offerId and optional forceRefresh
+     * @param jwt     The authenticated user's JWT
+     * @return Structured interview preparation response
+     */
+    @PostMapping("/interview-prep")
+    public ResponseEntity<InterviewPrepResponse> generateInterviewPrep(
+            @Valid @RequestBody InterviewPrepRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String candidateId = jwt.getSubject();
+        log.info("POST /api/ai/interview-prep - candidateId={}, offerId={}, forceRefresh={}",
+                candidateId, request.getOfferId(), request.isForceRefresh());
+
+        InterviewPrepResponse response = interviewPrepService.getInterviewPrep(
+                candidateId, request.getOfferId(), request.isForceRefresh());
+        return ResponseEntity.ok(response);
     }
 }
