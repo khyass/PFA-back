@@ -39,21 +39,25 @@ public class InterviewPrepService {
     private int resumeMaxChars;
 
     private static final String INTERVIEW_PREP_PROMPT = """
-            You are an expert interview coach. Generate interview preparation questions and answer outlines for a candidate.
+            Tu es un coach d'entretien professionnel expert. Génère des questions d'entretien pour un candidat postulant à ce poste.
 
-            JOB TITLE: %s
-            COMPANY: %s
-            JOB DESCRIPTION: %s
+            POSTE: %s
+            ENTREPRISE: %s
+            DESCRIPTION DU POSTE ET PROFIL RECHERCHÉ: %s
 
             %s
 
-            Generate:
-            - 5 technical interview questions specific to the job's required skills
-            - 3 behavioral/soft-skill questions
-            - For each question, provide a suggested answer outline (key points to cover, not a full scripted answer)
+            INSTRUCTIONS:
+            1. Les questions TECHNIQUES (5) doivent être directement liées au profil recherché et aux compétences requises dans la description du poste. Par exemple, si le poste demande Java/Spring Boot, pose des questions sur Java/Spring Boot. Si le poste demande React, pose des questions sur React.
+            2. Les questions COMPORTEMENTALES (3) doivent évaluer les soft skills du candidat : travail d'équipe, gestion du stress, communication, résolution de conflits, adaptabilité.
+            3. TOUTES les questions et réponses doivent être rédigées en FRANÇAIS.
 
-            Respond ONLY with a valid JSON object, no preamble, no markdown, no explanation:
-            {"technicalQuestions": [{"question": "...", "answerOutline": "..."}], "behavioralQuestions": [{"question": "...", "answerOutline": "..."}]}
+            Génère exactement 5 questions techniques et 3 questions comportementales (8 au total).
+            CRITIQUE: Réponds UNIQUEMENT avec un tableau JSON. Pas de markdown. Pas de préambule. Pas de texte supplémentaire.
+            Chaque élément doit avoir: type ("technical" ou "behavioral"), question, answerOutline.
+            Exemple de format:
+            [{"type":"technical","question":"Expliquez le fonctionnement de l'injection de dépendances dans Spring Boot.","answerOutline":"L'injection de dépendances permet de..."},{"type":"behavioral","question":"Décrivez une situation où vous avez dû gérer un conflit au sein de votre équipe.","answerOutline":"Points clés: identifier le problème, écouter les parties..."}]
+            Garde chaque answerOutline sous 80 mots. N'utilise pas d'objets imbriqués.
             """;
 
     /**
@@ -112,31 +116,139 @@ public class InterviewPrepService {
 
     private InterviewPrepResponse parseInterviewPrepResponse(String rawResponse, JobOfferDTO jobOffer) {
         try {
-            String jsonStr = JsonExtractor.extractJsonObject(rawResponse);
+            // Try to extract a JSON array (flat format)
+            String jsonStr = JsonExtractor.extractJsonArray(rawResponse);
             if (jsonStr == null) {
-                log.error("Could not extract JSON object from interview prep response");
-                throw new AiServiceException("AI returned an unparseable response. Please try again.");
+                // Fallback: try extracting JSON object (legacy format)
+                jsonStr = JsonExtractor.extractJsonObject(rawResponse);
             }
 
+            if (jsonStr == null) {
+                log.error("Could not extract JSON from interview prep response. Raw (first 500 chars): {}",
+                        rawResponse != null ? rawResponse.substring(0, Math.min(500, rawResponse.length())) : "null");
+                // Last resort: regex-based extraction
+                return buildResponseFromRegex(rawResponse, jobOffer);
+            }
+
+            // Sanitize
+            jsonStr = jsonStr.replace("\r\n", " ").replace("\n", " ").replace("\r", " ");
+            jsonStr = jsonStr.replaceAll("[\\x00-\\x1F&&[^\\x09]]", "");
+
+            log.debug("Sanitized interview prep JSON (first 300 chars): {}", jsonStr.substring(0, Math.min(300, jsonStr.length())));
+
+            // Try parsing as flat array first
+            if (jsonStr.trim().startsWith("[")) {
+                return parseAsArray(jsonStr, jobOffer);
+            }
+
+            // Try parsing as nested object
+            jsonStr = repairJsonBrackets(jsonStr);
             InterviewPrepResponse result = objectMapper.readValue(jsonStr, InterviewPrepResponse.class);
             result.setJobTitle(jobOffer.getTitle());
             result.setCompanyName(jobOffer.getCompanyName());
-
-            if (result.getTechnicalQuestions() == null) {
-                result.setTechnicalQuestions(java.util.List.of());
-            }
-            if (result.getBehavioralQuestions() == null) {
-                result.setBehavioralQuestions(java.util.List.of());
-            }
-
+            if (result.getTechnicalQuestions() == null) result.setTechnicalQuestions(java.util.List.of());
+            if (result.getBehavioralQuestions() == null) result.setBehavioralQuestions(java.util.List.of());
             return result;
 
         } catch (AiServiceException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed to parse interview prep response: {}", e.getMessage());
+            log.warn("JSON parsing failed ({}), falling back to regex extraction", e.getMessage());
+            return buildResponseFromRegex(rawResponse, jobOffer);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private InterviewPrepResponse parseAsArray(String jsonArrayStr, JobOfferDTO jobOffer) throws Exception {
+        java.util.List<java.util.Map<String, Object>> items = objectMapper.readValue(jsonArrayStr,
+                objectMapper.getTypeFactory().constructCollectionType(java.util.List.class, java.util.Map.class));
+
+        java.util.List<InterviewPrepResponse.QuestionAnswer> technical = new java.util.ArrayList<>();
+        java.util.List<InterviewPrepResponse.QuestionAnswer> behavioral = new java.util.ArrayList<>();
+
+        for (java.util.Map<String, Object> map : items) {
+            String type = String.valueOf(map.getOrDefault("type", "technical")).toLowerCase();
+            String question = String.valueOf(map.getOrDefault("question", ""));
+            Object outlineVal = map.containsKey("answerOutline") ? map.get("answerOutline") : map.getOrDefault("answer_outline", "");
+            String outline = String.valueOf(outlineVal);
+            if (question.isBlank()) continue;
+            var qa = InterviewPrepResponse.QuestionAnswer.builder()
+                    .question(question)
+                    .answerOutline(outline)
+                    .build();
+            if (type.contains("behavioral")) {
+                behavioral.add(qa);
+            } else {
+                technical.add(qa);
+            }
+        }
+
+        return InterviewPrepResponse.builder()
+                .jobTitle(jobOffer.getTitle())
+                .companyName(jobOffer.getCompanyName())
+                .technicalQuestions(technical)
+                .behavioralQuestions(behavioral)
+                .build();
+    }
+
+    /**
+     * Fallback: extracts question/answerOutline pairs using regex when JSON is too broken.
+     */
+    private InterviewPrepResponse buildResponseFromRegex(String rawResponse, JobOfferDTO jobOffer) {
+        if (rawResponse == null || rawResponse.isBlank()) {
             throw new AiServiceException("AI returned an unparseable response. Please try again.");
         }
+
+        java.util.List<InterviewPrepResponse.QuestionAnswer> technical = new java.util.ArrayList<>();
+        java.util.List<InterviewPrepResponse.QuestionAnswer> behavioral = new java.util.ArrayList<>();
+
+        // Extract all "question":"..." and "answerOutline":"..." pairs
+        java.util.regex.Pattern questionPattern = java.util.regex.Pattern.compile(
+                "\"question\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+        java.util.regex.Pattern outlinePattern = java.util.regex.Pattern.compile(
+                "\"answerOutline\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+        java.util.regex.Pattern typePattern = java.util.regex.Pattern.compile(
+                "\"type\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+
+        java.util.regex.Matcher qMatcher = questionPattern.matcher(rawResponse);
+        java.util.regex.Matcher oMatcher = outlinePattern.matcher(rawResponse);
+
+        java.util.List<String> questions = new java.util.ArrayList<>();
+        java.util.List<String> outlines = new java.util.ArrayList<>();
+        while (qMatcher.find()) questions.add(qMatcher.group(1));
+        while (oMatcher.find()) outlines.add(oMatcher.group(1));
+
+        // Determine if "behavioral" appears before each question to classify
+        boolean seenBehavioral = false;
+        int behavioralStart = rawResponse.toLowerCase().indexOf("behavioral");
+
+        for (int i = 0; i < questions.size(); i++) {
+            String q = questions.get(i);
+            String a = i < outlines.size() ? outlines.get(i) : "";
+            var qa = InterviewPrepResponse.QuestionAnswer.builder()
+                    .question(q).answerOutline(a).build();
+
+            // Check if this question's position is after "behavioral" keyword in raw text
+            int qPos = rawResponse.indexOf(q);
+            if (behavioralStart > 0 && qPos > behavioralStart) {
+                behavioral.add(qa);
+            } else {
+                technical.add(qa);
+            }
+        }
+
+        log.info("Regex fallback extracted {} technical and {} behavioral questions", technical.size(), behavioral.size());
+
+        if (technical.isEmpty() && behavioral.isEmpty()) {
+            throw new AiServiceException("AI returned an unparseable response. Please try again.");
+        }
+
+        return InterviewPrepResponse.builder()
+                .jobTitle(jobOffer.getTitle())
+                .companyName(jobOffer.getCompanyName())
+                .technicalQuestions(technical)
+                .behavioralQuestions(behavioral)
+                .build();
     }
 
     private void saveToCache(String candidateId, UUID offerId, InterviewPrepResponse result) {
@@ -193,5 +305,47 @@ public class InterviewPrepService {
             log.error("Error calling Ollama for interview prep: {}", e.getMessage());
             throw new AiServiceException("AI service is temporarily unavailable. Please try again.", e);
         }
+    }
+
+    /**
+     * Repairs common JSON bracket issues from LLM output.
+     * Appends missing ] and } at the end to balance the structure.
+     */
+    private String repairJsonBrackets(String json) {
+        int openBraces = 0, closeBraces = 0, openBrackets = 0, closeBrackets = 0;
+        boolean inString = false;
+        char prev = 0;
+        for (char c : json.toCharArray()) {
+            if (c == '"' && prev != '\\') {
+                inString = !inString;
+            } else if (!inString) {
+                switch (c) {
+                    case '{' -> openBraces++;
+                    case '}' -> closeBraces++;
+                    case '[' -> openBrackets++;
+                    case ']' -> closeBrackets++;
+                }
+            }
+            prev = c;
+        }
+
+        StringBuilder result = new StringBuilder(json);
+        int missingBrackets = openBrackets - closeBrackets;
+        int missingBraces = openBraces - closeBraces;
+
+        if (missingBrackets > 0 || missingBraces > 0) {
+            // Remove trailing comma if present
+            int len = result.length();
+            while (len > 0 && Character.isWhitespace(result.charAt(len - 1))) len--;
+            if (len > 0 && result.charAt(len - 1) == ',') {
+                result.setLength(len - 1);
+            }
+            // Append missing closers in correct order: ] then }
+            for (int i = 0; i < missingBrackets; i++) result.append(']');
+            for (int i = 0; i < missingBraces; i++) result.append('}');
+            log.debug("Repaired JSON: appended {} missing ']' and {} missing '}}'", missingBrackets, missingBraces);
+        }
+
+        return result.toString();
     }
 }

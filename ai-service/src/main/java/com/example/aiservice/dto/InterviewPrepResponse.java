@@ -1,5 +1,6 @@
 package com.example.aiservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InterviewPrepResponse {
 
     private String jobTitle;
@@ -25,6 +27,7 @@ public class InterviewPrepResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class QuestionAnswer {
         private String question;
         private String answerOutline;

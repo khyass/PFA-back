@@ -64,9 +64,16 @@ public final class JsonExtractor {
         int start = cleaned.indexOf('{');
         int end = cleaned.lastIndexOf('}');
 
-        if (start == -1 || end == -1 || start >= end) {
+        if (start == -1) {
             log.warn("No JSON object found in response (length={})", raw.length());
             return null;
+        }
+
+        // Handle unclosed objects (common LLM issue)
+        if (end == -1 || end <= start) {
+            String partial = cleaned.substring(start).trim();
+            log.warn("JSON object not properly closed, attempting to fix");
+            return partial + "}";
         }
 
         return cleaned.substring(start, end + 1);
