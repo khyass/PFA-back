@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - feature/authentication
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
