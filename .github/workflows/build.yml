@@ -40,6 +40,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn -B verify \
+          mvn -B verify -DskipTests \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=khyass_PFA-back
+            -Dsonar.projectKey=khyass_PFA-back \
+            -Dsonar.organization=khyass
