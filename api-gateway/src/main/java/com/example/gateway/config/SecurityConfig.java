@@ -35,6 +35,8 @@ public class SecurityConfig {
                                 "/auth/login", "/auth/register/**", "/auth/refresh",
                                 "/auth/introspect", "/actuator/health", "/actuator/info"
                         ).permitAll()
+                        // Swagger UI
+                        .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
                         // Role-restricted paths
                         .pathMatchers("/enterprise/**").hasRole("ENTERPRISE")
                         .pathMatchers("/candidate/**").hasRole("CANDIDATE")

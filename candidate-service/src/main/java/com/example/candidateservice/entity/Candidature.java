@@ -65,6 +65,12 @@ public class Candidature {
     @Column(name = "cover_letter", columnDefinition = "TEXT")
     private String coverLetter;
 
+    @Column(name = "interview_date")
+    private LocalDateTime interviewDate;
+
+    @Column(name = "interview_notes", columnDefinition = "TEXT")
+    private String interviewNotes;
+
     @OneToMany(mappedBy = "candidature", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("changedAt ASC")
     @Builder.Default

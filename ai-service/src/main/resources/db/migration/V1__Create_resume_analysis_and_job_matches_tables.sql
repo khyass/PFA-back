@@ -3,7 +3,7 @@
 
 -- Create resume_analysis table
 CREATE TABLE resume_analysis (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     candidate_id VARCHAR(255) NOT NULL UNIQUE,
     extracted_text TEXT NOT NULL,
     analyzed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -12,7 +12,7 @@ CREATE TABLE resume_analysis (
 
 -- Create job_offer_matches table
 CREATE TABLE job_offer_matches (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     candidate_id VARCHAR(255) NOT NULL,
     job_offer_id UUID NOT NULL,
     job_title VARCHAR(255) NOT NULL,
@@ -31,11 +31,3 @@ CREATE INDEX idx_job_matches_candidate ON job_offer_matches(candidate_id);
 CREATE INDEX idx_job_matches_job_offer ON job_offer_matches(job_offer_id);
 CREATE INDEX idx_job_matches_score ON job_offer_matches(match_score DESC);
 CREATE INDEX idx_job_matches_candidate_score ON job_offer_matches(candidate_id, match_score DESC);
-
--- Add comments for documentation
-COMMENT ON TABLE resume_analysis IS 'Stores extracted text from candidate resumes using Apache Tika';
-COMMENT ON TABLE job_offer_matches IS 'Caches AI-computed matches between candidates and job offers';
-COMMENT ON COLUMN resume_analysis.candidate_id IS 'Keycloak user ID of the candidate';
-COMMENT ON COLUMN resume_analysis.extracted_text IS 'Plain text extracted from resume using Apache Tika';
-COMMENT ON COLUMN job_offer_matches.missing_skills IS 'JSON array of skills the candidate is missing';
-COMMENT ON COLUMN job_offer_matches.interview_questions IS 'JSON array of AI-generated interview questions';

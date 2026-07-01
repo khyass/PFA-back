@@ -1,4 +1,5 @@
 com\example\gateway\ApiGatewayApplication.class
+com\example\gateway\config\OpenApiConfig.class
 com\example\gateway\controller\FallbackController.class
 com\example\gateway\config\SecurityConfig$KeycloakRealmRoleConverter.class
 com\example\gateway\config\SecurityConfig.class

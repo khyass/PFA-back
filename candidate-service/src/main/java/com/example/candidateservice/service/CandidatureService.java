@@ -35,6 +35,7 @@ public class CandidatureService {
     private final CandidateProfileRepository profileRepository;
     private final JobOfferClient jobOfferClient;
     private final CandidateMapper candidateMapper;
+    private final NotificationService notificationService;
 
     /**
      * Gets all candidatures for the authenticated candidate, optionally filtered by status.
@@ -167,6 +168,14 @@ public class CandidatureService {
      * This would typically be called via an event or internal API.
      */
     public void updateCandidatureStatus(UUID id, CandidatureStatus newStatus, String note) {
+        updateCandidatureStatus(id, newStatus, note, null, null);
+    }
+
+    /**
+     * Updates the status of a candidature with optional interview scheduling.
+     */
+    public void updateCandidatureStatus(UUID id, CandidatureStatus newStatus, String note,
+                                        LocalDateTime interviewDate, String interviewNotes) {
         log.info("Updating status of candidature {} to {}", id, newStatus);
 
         Candidature candidature = candidatureRepository.findById(id)
@@ -175,8 +184,30 @@ public class CandidatureService {
         CandidatureStatus oldStatus = candidature.getStatus();
         candidature.setStatus(newStatus);
 
+        if (interviewDate != null) {
+            candidature.setInterviewDate(interviewDate);
+        }
+        if (interviewNotes != null) {
+            candidature.setInterviewNotes(interviewNotes);
+        }
+
         candidatureRepository.save(candidature);
         createStatusHistoryEntry(candidature, oldStatus, newStatus, note);
+
+        // Send notification to candidate
+        try {
+            String interviewDateStr = interviewDate != null ? interviewDate.toString() : null;
+            notificationService.notifyStatusChange(
+                    candidature.getCandidateId(),
+                    candidature.getJobOfferTitle() != null ? candidature.getJobOfferTitle() : "Offre",
+                    candidature.getCompanyName() != null ? candidature.getCompanyName() : "Entreprise",
+                    oldStatus,
+                    newStatus,
+                    interviewDateStr
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send notification for candidature {}: {}", id, e.getMessage());
+        }
 
         log.info("Updated candidature {} status from {} to {}", id, oldStatus, newStatus);
     }
@@ -197,7 +228,9 @@ public class CandidatureService {
                     .candidateId(c.getCandidateId())
                     .status(c.getStatus())
                     .appliedDate(c.getAppliedDate())
-                    .coverLetter(c.getCoverLetter());
+                    .coverLetter(c.getCoverLetter())
+                    .interviewDate(c.getInterviewDate())
+                    .interviewNotes(c.getInterviewNotes());
 
             profileRepository.findByUserId(c.getCandidateId()).ifPresent(profile -> {
                 builder.candidateName(profile.getFullName() != null ? profile.getFullName() : c.getCandidateId());

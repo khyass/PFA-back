@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/job-offers", "/api/job-offers/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/job-offers/*/increment-candidature-count").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/job-offers/*/decrement-candidature-count").authenticated()

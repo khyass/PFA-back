@@ -3,9 +3,14 @@ package com.example.aiservice.controller;
 import com.example.aiservice.dto.*;
 import com.example.aiservice.service.AiMatchingService;
 import com.example.aiservice.service.CoverLetterService;
+import com.example.aiservice.service.InterviewChatService;
 import com.example.aiservice.service.InterviewPrepService;
 import com.example.aiservice.service.JobSuggestionService;
 import com.example.aiservice.service.KeywordSuggestionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +33,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('CANDIDATE')")
+@Tag(name = "Intelligence Artificielle", description = "Endpoints IA : matching, suggestions, préparation d'entretien, génération de lettre de motivation")
 public class AiController {
 
     private final AiMatchingService aiMatchingService;
     private final JobSuggestionService jobSuggestionService;
     private final KeywordSuggestionService keywordSuggestionService;
     private final InterviewPrepService interviewPrepService;
+    private final InterviewChatService interviewChatService;
     private final CoverLetterService coverLetterService;
 
     /**
@@ -43,6 +50,9 @@ public class AiController {
      * @param jwt The authenticated user's JWT
      * @return List of job suggestions ordered by match score
      */
+    @Operation(summary = "Obtenir les suggestions d'offres", description = "Retourne les offres recommandées pour le candidat connecté. Retourne 202 si le calcul est en cours.")
+    @ApiResponse(responseCode = "200", description = "Suggestions disponibles")
+    @ApiResponse(responseCode = "202", description = "Calcul en cours")
     @GetMapping("/suggestions")
     public ResponseEntity<SuggestionsResponseDTO> getSuggestions(@AuthenticationPrincipal Jwt jwt) {
         String candidateId = jwt.getSubject();
@@ -65,9 +75,10 @@ public class AiController {
      * @param jwt        The authenticated user's JWT
      * @return The match result
      */
+    @Operation(summary = "Obtenir le score de matching", description = "Calcule ou récupère le score de compatibilité entre le candidat et une offre.")
     @GetMapping("/match/{jobOfferId}")
     public ResponseEntity<JobMatchResponseDTO> getMatch(
-            @PathVariable UUID jobOfferId,
+            @Parameter(description = "ID de l'offre d'emploi") @PathVariable UUID jobOfferId,
             @AuthenticationPrincipal Jwt jwt) {
 
         String candidateId = jwt.getSubject();
@@ -87,9 +98,10 @@ public class AiController {
      * @param jwt        The authenticated user's JWT
      * @return The freshly computed match result
      */
+    @Operation(summary = "Recalculer le matching", description = "Force le recalcul du score de compatibilité (ignore le cache).")
     @PostMapping("/match/{jobOfferId}/refresh")
     public ResponseEntity<JobMatchResponseDTO> refreshMatch(
-            @PathVariable UUID jobOfferId,
+            @Parameter(description = "ID de l'offre d'emploi") @PathVariable UUID jobOfferId,
             @AuthenticationPrincipal Jwt jwt) {
 
         String candidateId = jwt.getSubject();
@@ -107,9 +119,10 @@ public class AiController {
      * @param jwt        The authenticated user's JWT
      * @return Interview preparation questions
      */
+    @Operation(summary = "Préparation d'entretien (par offre)", description = "Génère des questions d'entretien personnalisées pour une offre spécifique.")
     @GetMapping("/interview-prep/{jobOfferId}")
     public ResponseEntity<InterviewPrepDTO> getInterviewPrep(
-            @PathVariable UUID jobOfferId,
+            @Parameter(description = "ID de l'offre d'emploi") @PathVariable UUID jobOfferId,
             @AuthenticationPrincipal Jwt jwt) {
 
         String candidateId = jwt.getSubject();
@@ -138,6 +151,7 @@ public class AiController {
      * @param jwt     The authenticated user's JWT
      * @return List of offer suggestions with scores and justifications
      */
+    @Operation(summary = "Suggestions par mots-clés", description = "Retourne les offres correspondant à une liste de compétences/mots-clés.")
     @PostMapping("/suggest-offers")
     public ResponseEntity<List<OfferSuggestionResponse>> suggestOffers(
             @Valid @RequestBody SuggestOffersRequest request,
@@ -158,6 +172,7 @@ public class AiController {
      * @param jwt     The authenticated user's JWT
      * @return Structured interview preparation response
      */
+    @Operation(summary = "Préparation d'entretien structurée", description = "Génère des questions techniques et comportementales avec des pistes de réponses.")
     @PostMapping("/interview-prep")
     public ResponseEntity<InterviewPrepResponse> generateInterviewPrep(
             @Valid @RequestBody InterviewPrepRequest request,
@@ -179,6 +194,7 @@ public class AiController {
      * @param jwt     The authenticated user's JWT
      * @return Generated cover letter text
      */
+    @Operation(summary = "Générer une lettre de motivation", description = "Génère une lettre de motivation personnalisée par IA pour une offre donnée.")
     @PostMapping("/generate-cover-letter")
     public ResponseEntity<CoverLetterResponse> generateCoverLetter(
             @Valid @RequestBody CoverLetterRequest request,
@@ -190,6 +206,28 @@ public class AiController {
 
         CoverLetterResponse response = coverLetterService.generateCoverLetter(
                 candidateId, request.getOfferId(), request.getCandidateSkills(), request.getTone());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Chat-based interview preparation.
+     * Allows conversational interaction with an AI interview coach.
+     *
+     * @param request The chat request with offerId, message, and conversation history
+     * @param jwt     The authenticated user's JWT
+     * @return AI coach reply
+     */
+    @Operation(summary = "Chat d'entretien IA", description = "Interaction conversationnelle avec un coach IA pour préparer un entretien.")
+    @PostMapping("/interview-chat")
+    public ResponseEntity<InterviewChatResponse> interviewChat(
+            @Valid @RequestBody InterviewChatRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String candidateId = jwt.getSubject();
+        log.info("POST /api/ai/interview-chat - candidateId={}, offerId={}", candidateId, request.getOfferId());
+
+        InterviewChatResponse response = interviewChatService.chat(
+                candidateId, request.getOfferId(), request.getMessage(), request.getHistory());
         return ResponseEntity.ok(response);
     }
 }

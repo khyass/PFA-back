@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
 
+  # ─── KEYCLOAK STACK ──────────────────────────────────────────
   keycloak-db:
     image: postgres:16-alpine
     container_name: keycloak-db
@@ -11,8 +12,6 @@ services:
       POSTGRES_PASSWORD: keycloak
     volumes:
       - keycloak-db-data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     networks:
       - job-platform-network
     healthcheck:
@@ -35,7 +34,6 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: "true"
-      KC_METRICS_ENABLED: "true"
       KC_HTTP_PORT: "8080"
     volumes:
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
@@ -53,8 +51,126 @@ services:
       retries: 15
       start_period: 60s
 
+  # ─── API GATEWAY ─────────────────────────────────────────────
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8081:8081"
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/job-platform
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/job-platform/protocol/openid-connect/certs
+      AUTH_SERVICE_URL: http://auth-service:8082
+      CANDIDATE_SERVICE_URL: http://candidate-service:8085
+      JOB_OFFER_SERVICE_URL: http://job-offer-service:8084
+      AI_SERVICE_URL: http://ai-service:8086
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - job-platform-network
+
+  # ─── AUTH SERVICE (pas de DB, utilise Keycloak) ──────────────
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8082:8082"
+    environment:
+      # Remplace localhost → keycloak (nom du conteneur)
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/job-platform
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/job-platform/protocol/openid-connect/certs
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: job-platform
+      KEYCLOAK_CLIENT_ID: job-platform-app
+      KEYCLOAK_API_CLIENT_ID: job-platform-api
+      KEYCLOAK_API_CLIENT_SECRET: job-platform-api-secret
+      KEYCLOAK_ADMIN_USERNAME: khouloud
+      KEYCLOAK_ADMIN_PASSWORD: Kh0ùl0ùd2001
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - job-platform-network
+
+  # ─── CANDIDATE SERVICE (H2 file + uploads) ───────────────────
+  candidate-service:
+    build: ./candidate-service
+    container_name: candidate-service
+    ports:
+      - "8085:8085"
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/job-platform
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/job-platform/protocol/openid-connect/certs
+      JOB_OFFER_SERVICE_URL: http://job-offer-service:8084
+      UPLOAD_PATH: /app/uploads
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+    volumes:
+      # Persiste le fichier H2 (./data/candidates dans le conteneur = /app/data)
+      - candidate-h2-data:/app/data
+      # Persiste les fichiers uploadés (CVs, etc.)
+      - candidate-uploads:/app/uploads
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - job-platform-network
+
+  # ─── JOB OFFER SERVICE (H2 file) ─────────────────────────────
+  job-offer-service:
+    build: ./job-offer-service
+    container_name: job-offer-service
+    ports:
+      - "8084:8084"
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/job-platform
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/job-platform/protocol/openid-connect/certs
+      CANDIDATE_SERVICE_URL: http://candidate-service:8085
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+    volumes:
+      - job-offer-h2-data:/app/data
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - job-platform-network
+
+  # ─── AI SERVICE (H2 file + Ollama externe) ───────────────────
+  ai-service:
+    build: ./ai-service
+    container_name: ai-service
+    ports:
+      - "8086:8086"
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/job-platform
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/job-platform/protocol/openid-connect/certs
+      JOB_OFFER_SERVICE_URL: http://job-offer-service:8084
+      CANDIDATE_SERVICE_URL: http://candidate-service:8085
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.2
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+    volumes:
+      - ai-h2-data:/app/data
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - job-platform-network
+
+# ─── VOLUMES ───────────────────────────────────────────────────
 volumes:
-  keycloak-db-data:
+  keycloak-db-data:       # PostgreSQL de Keycloak (seul vrai Postgres)
+  candidate-h2-data:      # Fichier H2 candidate-service
+  job-offer-h2-data:      # Fichier H2 job-offer-service
+  ai-h2-data:             # Fichier H2 ai-service
+  candidate-uploads:      # CVs et fichiers uploadés
 
 networks:
   job-platform-network:

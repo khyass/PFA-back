@@ -21,4 +21,5 @@ com\example\authservice\dto\RegisterEnterpriseRequest.class
 com\example\authservice\dto\RegisterCandidateRequest$RegisterCandidateRequestBuilder.class
 com\example\authservice\dto\RefreshTokenRequest.class
 com\example\authservice\AuthServiceApplication.class
+com\example\authservice\config\OpenApiConfig.class
 com\example\authservice\dto\AuthResponse.class

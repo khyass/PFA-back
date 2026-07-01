@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -26,4 +27,6 @@ public class CandidatureForEnterpriseDTO {
     private CandidatureStatus status;
     private LocalDate appliedDate;
     private String coverLetter;
+    private LocalDateTime interviewDate;
+    private String interviewNotes;
 }

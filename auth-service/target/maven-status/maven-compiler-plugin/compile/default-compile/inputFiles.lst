@@ -1,17 +1,18 @@
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\AuthServiceApplication.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\KeycloakConfig.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\MdcLoggingFilter.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\SecurityConfig.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\controller\AuthController.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\AuthResponse.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\LoginRequest.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\RefreshTokenRequest.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\RegisterCandidateRequest.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\RegisterEnterpriseRequest.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\UserProfile.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\GlobalExceptionHandler.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\InvalidCredentialsException.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\KeycloakCommunicationException.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\TokenExpiredException.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\UserAlreadyExistsException.java
-C:\Users\kbouziri\Documents\ALTERNANCE PFA\PFA-back\auth-service\src\main\java\com\example\authservice\service\KeycloakService.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\AuthServiceApplication.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\KeycloakConfig.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\MdcLoggingFilter.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\OpenApiConfig.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\config\SecurityConfig.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\controller\AuthController.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\AuthResponse.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\LoginRequest.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\RefreshTokenRequest.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\RegisterCandidateRequest.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\RegisterEnterpriseRequest.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\dto\UserProfile.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\GlobalExceptionHandler.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\InvalidCredentialsException.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\KeycloakCommunicationException.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\TokenExpiredException.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\exception\UserAlreadyExistsException.java
+C:\Users\kbouziri\Documents\ALTERNANCE_PFA\PFA-back\auth-service\src\main\java\com\example\authservice\service\KeycloakService.java

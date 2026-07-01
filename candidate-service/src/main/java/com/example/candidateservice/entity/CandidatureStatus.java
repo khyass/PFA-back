@@ -6,6 +6,9 @@ package com.example.candidateservice.entity;
 public enum CandidatureStatus {
     PENDING,
     REVIEWING,
+    INTERVIEW,
+    OFFER,
+    HIRED,
     ACCEPTED,
     REJECTED
 }

@@ -6,6 +6,10 @@ import com.example.jobofferservice.dto.JobOfferResponseDTO;
 import com.example.jobofferservice.dto.JobOfferStatusUpdateDTO;
 import com.example.jobofferservice.entity.JobOfferStatus;
 import com.example.jobofferservice.service.JobOfferService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +27,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * REST controller for JobOffer CRUD operations.
- * All endpoints require ROLE_ENTREPRISE.
- */
 @RestController
 @RequestMapping("/api/job-offers")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Offres d'Emploi", description = "CRUD des offres d'emploi : création, modification, suppression et consultation")
 public class JobOfferController {
 
     private final JobOfferService jobOfferService;
@@ -44,6 +45,7 @@ public class JobOfferController {
      * @param pageable Pagination parameters (default: page=0, size=10, sort=publishedDate,desc)
      * @return Page of job offers
      */
+    @Operation(summary = "Lister les offres d'emploi", description = "Retourne les offres paginées avec filtres optionnels par statut, entreprise et propriétaire.")
     @GetMapping
     public ResponseEntity<Page<JobOfferResponseDTO>> getAllJobOffers(
             @RequestParam(required = false) JobOfferStatus status,
@@ -62,8 +64,9 @@ public class JobOfferController {
      * @param id The job offer ID
      * @return The job offer
      */
+    @Operation(summary = "Détail d'une offre", description = "Retourne les informations complètes d'une offre d'emploi.")
     @GetMapping("/{id}")
-    public ResponseEntity<JobOfferResponseDTO> getJobOfferById(@PathVariable UUID id) {
+    public ResponseEntity<JobOfferResponseDTO> getJobOfferById(@Parameter(description = "ID de l'offre") @PathVariable UUID id) {
         log.debug("GET /api/job-offers/{}", id);
         JobOfferResponseDTO jobOffer = jobOfferService.getJobOfferById(id);
         return ResponseEntity.ok(jobOffer);
@@ -77,9 +80,10 @@ public class JobOfferController {
      * @param jwt The authenticated user's JWT
      * @return List of candidatures
      */
+    @Operation(summary = "Candidatures d'une offre", description = "Retourne toutes les candidatures reçues pour une offre. Réservé au propriétaire de l'offre.")
     @GetMapping("/{id}/candidatures")
     public ResponseEntity<List<CandidatureDTO>> getCandidaturesForJobOffer(
-            @PathVariable UUID id,
+            @Parameter(description = "ID de l'offre") @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
 
         String userId = jwt.getSubject();
@@ -96,6 +100,8 @@ public class JobOfferController {
      * @param jwt     The authenticated user's JWT
      * @return The created job offer
      */
+    @Operation(summary = "Créer une offre", description = "Crée une nouvelle offre d'emploi. Réservé aux entreprises.")
+    @ApiResponse(responseCode = "201", description = "Offre créée")
     @PreAuthorize("hasRole('ENTERPRISE')")
     @PostMapping
     public ResponseEntity<JobOfferResponseDTO> createJobOffer(
@@ -122,10 +128,11 @@ public class JobOfferController {
      * @param jwt     The authenticated user's JWT
      * @return The updated job offer
      */
+    @Operation(summary = "Modifier une offre", description = "Mise à jour complète d'une offre existante. Réservé au propriétaire.")
     @PreAuthorize("hasRole('ENTERPRISE')")
     @PutMapping("/{id}")
     public ResponseEntity<JobOfferResponseDTO> updateJobOffer(
-            @PathVariable UUID id,
+            @Parameter(description = "ID de l'offre") @PathVariable UUID id,
             @Valid @RequestBody JobOfferRequestDTO request,
             @AuthenticationPrincipal Jwt jwt) {
 
@@ -145,10 +152,11 @@ public class JobOfferController {
      * @param jwt     The authenticated user's JWT
      * @return The updated job offer
      */
+    @Operation(summary = "Changer le statut", description = "Met à jour uniquement le statut d'une offre (OPEN, CLOSED, DRAFT). Réservé au propriétaire.")
     @PreAuthorize("hasRole('ENTERPRISE')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<JobOfferResponseDTO> updateJobOfferStatus(
-            @PathVariable UUID id,
+            @Parameter(description = "ID de l'offre") @PathVariable UUID id,
             @Valid @RequestBody JobOfferStatusUpdateDTO request,
             @AuthenticationPrincipal Jwt jwt) {
 
@@ -167,10 +175,12 @@ public class JobOfferController {
      * @param jwt The authenticated user's JWT
      * @return No content on success
      */
+    @Operation(summary = "Supprimer une offre", description = "Supprime une offre d'emploi. Uniquement si aucune candidature n'est associée.")
+    @ApiResponse(responseCode = "204", description = "Offre supprimée")
     @PreAuthorize("hasRole('ENTERPRISE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteJobOffer(
-            @PathVariable UUID id,
+            @Parameter(description = "ID de l'offre") @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
 
         String userId = jwt.getSubject();
@@ -184,8 +194,9 @@ public class JobOfferController {
      * Internal endpoint: increments the candidature count for a job offer.
      * Called by candidate-service when a new application is submitted.
      */
+    @Operation(summary = "Incrémenter compteur (interne)", description = "Endpoint interne appelé par candidate-service lors d'une nouvelle candidature.")
     @PostMapping("/{id}/increment-candidature-count")
-    public ResponseEntity<Void> incrementCandidatureCount(@PathVariable UUID id) {
+    public ResponseEntity<Void> incrementCandidatureCount(@Parameter(description = "ID de l'offre") @PathVariable UUID id) {
         log.info("POST /api/job-offers/{}/increment-candidature-count", id);
         jobOfferService.incrementCandidatureCount(id);
         return ResponseEntity.ok().build();
@@ -195,8 +206,9 @@ public class JobOfferController {
      * Internal endpoint: decrements the candidature count for a job offer.
      * Called by candidate-service when a candidature is withdrawn.
      */
+    @Operation(summary = "Décrémenter compteur (interne)", description = "Endpoint interne appelé par candidate-service lors du retrait d'une candidature.")
     @PostMapping("/{id}/decrement-candidature-count")
-    public ResponseEntity<Void> decrementCandidatureCount(@PathVariable UUID id) {
+    public ResponseEntity<Void> decrementCandidatureCount(@Parameter(description = "ID de l'offre") @PathVariable UUID id) {
         log.info("POST /api/job-offers/{}/decrement-candidature-count", id);
         jobOfferService.decrementCandidatureCount(id);
         return ResponseEntity.ok().build();

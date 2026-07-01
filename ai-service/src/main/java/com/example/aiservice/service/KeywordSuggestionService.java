@@ -80,8 +80,12 @@ public class KeywordSuggestionService {
 
         if (!cached.isEmpty()) {
             log.info("Returning {} cached suggestions for candidate {}", cached.size(), candidateId);
+            // Fetch offer details to enrich cached results with title/company
+            List<JobOfferDTO> openOffers = jobOfferClient.getAllOpenJobOffers();
+            Map<String, JobOfferDTO> offerMap = openOffers.stream()
+                    .collect(Collectors.toMap(o -> o.getId().toString(), o -> o, (a, b) -> a));
             return cached.stream()
-                    .map(this::toResponse)
+                    .map(entity -> toResponse(entity, offerMap))
                     .toList();
         }
 
@@ -232,9 +236,12 @@ public class KeywordSuggestionService {
         }
     }
 
-    private OfferSuggestionResponse toResponse(OfferSuggestion entity) {
+    private OfferSuggestionResponse toResponse(OfferSuggestion entity, Map<String, JobOfferDTO> offerMap) {
+        JobOfferDTO offer = offerMap.get(entity.getOfferId().toString());
         return OfferSuggestionResponse.builder()
                 .offerId(entity.getOfferId())
+                .offerTitle(offer != null ? offer.getTitle() : "Offre inconnue")
+                .companyName(offer != null ? offer.getCompanyName() : "Entreprise inconnue")
                 .score(entity.getScore())
                 .justification(entity.getJustification())
                 .build();

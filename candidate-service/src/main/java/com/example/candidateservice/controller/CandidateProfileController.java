@@ -3,6 +3,8 @@ package com.example.candidateservice.controller;
 import com.example.candidateservice.dto.CandidateProfileDTO;
 import com.example.candidateservice.dto.ProfileUpdateRequestDTO;
 import com.example.candidateservice.service.CandidateProfileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,15 +18,12 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * REST controller for Candidate Profile operations.
- * All endpoints require ROLE_CANDIDATE.
- */
 @RestController
 @RequestMapping("/api/candidate/profile")
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('CANDIDATE')")
+@Tag(name = "Profil Candidat", description = "Gestion du profil candidat : informations personnelles et CV")
 public class CandidateProfileController {
 
     private final CandidateProfileService profileService;

@@ -12,12 +12,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/job-platform}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/job-platform/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/job-platform}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/job-platform/protocol/openid-connect/certs}
 
 # Keycloak Admin Configuration
 keycloak:
-  auth-server-url: http://localhost:8180
+  auth-server-url: http://localhost:8080
   realm: ${KEYCLOAK_REALM:job-platform}
   client-id: ${KEYCLOAK_CLIENT_ID:job-platform-app}
   api-client-id: ${KEYCLOAK_API_CLIENT_ID:job-platform-api}
