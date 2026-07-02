@@ -164,6 +164,18 @@ services:
     networks:
       - job-platform-network
 
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "9090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+    networks:
+      - job-platform-network
+
 # ─── VOLUMES ───────────────────────────────────────────────────
 volumes:
   keycloak-db-data:       # PostgreSQL de Keycloak (seul vrai Postgres)
