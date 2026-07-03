@@ -183,6 +183,7 @@ volumes:
   job-offer-h2-data:      # Fichier H2 job-offer-service
   ai-h2-data:             # Fichier H2 ai-service
   candidate-uploads:      # CVs et fichiers uploadés
+  jenkins-data:           # Données Jenkins
 
 networks:
   job-platform-network:
