@@ -85,9 +85,11 @@ management:
         include: health,info,metrics,gateway,prometheus
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
     gateway:
       enabled: true
+  security:
+    enabled: false
   tracing:
     sampling:
       probability: 1.0

@@ -33,7 +33,7 @@ public class SecurityConfig {
                         // Public endpoints
                         .pathMatchers(
                                 "/auth/login", "/auth/register/**", "/auth/refresh",
-                                "/auth/introspect", "/actuator/health", "/actuator/info"
+                                "/auth/introspect", "/actuator/health", "/actuator/info", "/actuator/**"
                         ).permitAll()
                         // Swagger UI
                         .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()

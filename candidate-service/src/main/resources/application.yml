@@ -62,7 +62,9 @@ management:
         include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
+  security:
+    enabled: false
   tracing:
     sampling:
       probability: 1.0
