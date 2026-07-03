@@ -53,38 +53,15 @@ pipeline {
                 }
             }
         }
-
-        stage('Build Images') {
-            steps {
-                sh '''
-                    podman build -t job-platform/auth-service:${BUILD_NUMBER}      ./auth-service
-                    podman build -t job-platform/candidate-service:${BUILD_NUMBER}  ./candidate-service
-                    podman build -t job-platform/job-offer-service:${BUILD_NUMBER}  ./job-offer-service
-                    podman build -t job-platform/ai-service:${BUILD_NUMBER}         ./ai-service
-                    podman build -t job-platform/api-gateway:${BUILD_NUMBER}        ./api-gateway
-                '''
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh '''
-                    python -m podman_compose down --remove-orphans
-                    python -m podman_compose up -d
-                '''
-            }
-        }
     }
 
     post {
         success {
-            echo 'Build #${BUILD_NUMBER} réussi'
+            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+            echo "✅ Build #${BUILD_NUMBER} réussi"
         }
         failure {
-            echo 'Build #${BUILD_NUMBER} échoué'
-        }
-        always {
-            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+            echo "❌ Build #${BUILD_NUMBER} échoué"
         }
     }
 }
